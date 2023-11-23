@@ -5,10 +5,14 @@ from django.http import JsonResponse
 # from .models import Topic
 from rest_framework import status
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST, require_GET
 import pandas as pd
 import numpy as np
 from django.http import JsonResponse
 from ctgan import CTGAN
+import json
+from django.core.exceptions import ObjectDoesNotExist
+
 
 # from django.core.files.base import ContentFile
 # from django.core.files.storage import FileSystemStorage 
@@ -16,36 +20,53 @@ from ctgan import CTGAN
 # Create your views here.
 
 @csrf_exempt
+@require_POST
 def main(request):
-    if request.method=='POST':
+    try:
         file= request.FILES['file']
         obj= File.objects.create(file = file)
         df= pd.read_csv(obj.file)
         name= file.name.split('.')[0]
-        # print(np.array(df)[0])
         des= df.describe()
-        serial_mean= des.loc['mean'].to_dict()
-        serial_std= des.loc['std'].to_dict()
-        serial_min= des.loc['min'].to_dict()
-        serial_max= des.loc['max'].to_dict()
-        #generate data
         catObj= np.array(df.select_dtypes("object").columns)
         ctgan = CTGAN(verbose=True)
-        ctgan.fit(df, catObj, epochs = 2, embedding_dim= 200)
+        ctgan.fit(df, catObj, epochs = 2)
         ctgan.save(f"first_app/models/{name}_model.pkl")
 
-        samples = ctgan.sample(1000)
-        print(samples.head())
-        
+        # samples = ctgan.sample(10)
+
+        # samples_2d_array = samples.values.tolist()
+        # print(samples_2d_array)        
         return JsonResponse(
             {
-            'serial_mean': serial_mean,
-            'serial_std': serial_std,
-            'serial_max': serial_max,
-             'serial_min':serial_min,
-
-        }
-        # obj
+                'res':'Model trained successfully',
+                # 'data': samples_2d_array
+            }
         , status=200)
-    
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status= 500)
 
+
+@csrf_exempt
+@require_POST
+def generate_data(request):
+    try:
+        data = json.loads(request.body)
+        n_rows = int(data.get('n_rows', 10))
+        model_name = data.get('model_name')  # Assuming you pass the model name as a parameter
+        if not model_name:
+            return JsonResponse({'error': 'Model name not provided'}, status=400)
+        model_path = f"first_app/models/{model_name}_model.pkl"
+        
+        # Load the pre-trained model
+        ctgan = CTGAN.load(model_path)
+
+        samples = ctgan.sample(n_rows)
+        print(samples)
+        samples_2d_array = [samples.columns.tolist()] + samples.values.tolist()
+        print(samples_2d_array)
+        return JsonResponse({'res': samples_2d_array}, status=200)
+    except ObjectDoesNotExist:
+        return JsonResponse({'error': 'Model not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
