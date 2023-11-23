@@ -23,4 +23,5 @@ urlpatterns = [
     re_path(r'^first_app/',include('first_app.urls')),
     re_path('admin/', admin.site.urls),
     re_path(r'file/$', views.main),
+    re_path(r'generate/', views.generate_data)
 ]
