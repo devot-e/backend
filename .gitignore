@@ -1,2 +1,3 @@
 files
-first_app/models/
+first_app/models
+**/__pycache__
