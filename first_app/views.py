@@ -6,6 +6,7 @@ from django.http import JsonResponse
 from rest_framework import status
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_GET
+from rest_framework.decorators import api_view
 import pandas as pd
 import numpy as np
 from django.http import JsonResponse
@@ -68,5 +69,26 @@ def generate_data(request):
         return JsonResponse({'res': samples_2d_array}, status=200)
     except ObjectDoesNotExist:
         return JsonResponse({'error': 'Model not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@csrf_exempt
+@api_view(['POST'])
+def sample_model(request):
+    try:
+        data = json.loads(request.body)
+        param1= request.query_params.get('model')
+        n_rows = int(data.get('n_rows', 10))
+        print(param1, n_rows)
+        if not param1:
+            return JsonResponse({'error': 'model name not provided'}, status= 400)
+        # if param1!='adult' or param1!='company':
+        #     return JsonResponse({'error': 'Invalid model name'}, status= 400)
+        path= f"first_app/pretrained_models/{param1}.pkl"
+        ctgan= CTGAN.load(path)
+        samples= ctgan.sample(n_rows)
+        samples_2d_array = [samples.columns.tolist()] + samples.values.tolist()
+
+        return JsonResponse({ 'data': samples_2d_array }, status= 200)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
