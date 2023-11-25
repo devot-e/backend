@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 import io
 import os
 
-matplotlib.use('Agg')
+# matplotlib.use('Agg')
 base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # from django.core.files.base import ContentFile
 # from django.core.files.storage import FileSystemStorage 
@@ -129,8 +129,6 @@ def generate_report(request):
         # Construct absolute paths
         file_path = os.path.join(base_dir, "first_app", "user_files", f"{file_name}.csv")
         new_data_path = os.path.join(base_dir, "first_app", "generated_data", f"{file_name}.csv")
-        print(file_path)
-        print(new_data_path)
         # Check if files exist
         if not os.path.exists(file_path) or not os.path.exists(new_data_path):
             return JsonResponse({'error': 'File not found'}, status=404)
@@ -139,6 +137,7 @@ def generate_report(request):
         new_data= pd.read_csv(new_data_path)
         new_data= new_data.drop(new_data.columns[0], axis=1)
         table_evaluator = TableEvaluator(df,new_data)
+        # table_evaluator.visual_evaluation()
 
         # Generate the plot using a method from TableEvaluator (replace with actual method name)
         # plot = table_evaluator.generate_plot()
@@ -148,8 +147,6 @@ def generate_report(request):
         # plot.savefig(image_path, format='png')
 
         # plt.savefig('myfig')
-        print(table_evaluator)
-        table_evaluator.visual_evaluation()
-        return JsonResponse({'res':table_evaluator}, status=200)
+        return JsonResponse({'res':'plot created'}, status=200)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
