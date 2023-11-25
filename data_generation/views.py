@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-from first_app.models import  File, CSVFile
+from data_generation.models import  File, CSVFile
 from django.http import JsonResponse
 # from .models import Topic
 from rest_framework import status
@@ -18,8 +18,11 @@ import matplotlib
 import matplotlib.pyplot as plt
 import io
 import os
+from matplotlib.backends.backend_pdf import PdfPages
+import seaborn as sns
 
-# matplotlib.use('Agg')
+
+matplotlib.use('Agg')
 base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # from django.core.files.base import ContentFile
 # from django.core.files.storage import FileSystemStorage 
@@ -35,7 +38,7 @@ def main(request):
         print("name = ",name)
 
         # Specify the directory where you want to save the file
-        save_directory = 'first_app/user_files'
+        save_directory = 'data_generation/user_files'
 
         # Create the directory if it doesn't exist
         if not os.path.exists(save_directory):
@@ -55,7 +58,7 @@ def main(request):
         catObj= np.array(df.select_dtypes("object").columns)
         ctgan = CTGAN(verbose=True)
         ctgan.fit(df, catObj, epochs = 2)
-        ctgan.save(f"first_app/models/{name}_model.pkl")
+        ctgan.save(f"data_generation/models/{name}_model.pkl")
 
         # samples = ctgan.sample(10)
 
@@ -80,13 +83,13 @@ def generate_data(request):
         model_name = data.get('model_name')  # Assuming you pass the model name as a parameter
         if not model_name:
             return JsonResponse({'error': 'Model name not provided'}, status=400)
-        model_path = f"first_app/models/{model_name}_model.pkl"
+        model_path = f"data_generation/models/{model_name}_model.pkl"
         
         # Load the pre-trained model
         ctgan = CTGAN.load(model_path)
 
         samples = ctgan.sample(n_rows)
-        samples.to_csv(f"first_app/generated_data/{model_name}.csv")
+        samples.to_csv(f"data_generation/generated_data/{model_name}.csv")
         print(samples)
         samples_2d_array = [samples.columns.tolist()] + samples.values.tolist()
         print(samples_2d_array)
@@ -108,10 +111,10 @@ def sample_model(request):
             return JsonResponse({'error': 'model name not provided'}, status= 400)
         # if param1!='adult' or param1!='company':
         #     return JsonResponse({'error': 'Invalid model name'}, status= 400)
-        path= f"first_app/pretrained_models/{param1}.pkl"
+        path= f"data_generation/pretrained_models/{param1}.pkl"
         ctgan= CTGAN.load(path)
         samples= ctgan.sample(n_rows)
-        samples.to_csv(f"first_app/generated_data/{param1}.csv")
+        samples.to_csv(f"data_generation/generated_data/{param1}.csv")
         samples_2d_array = [samples.columns.tolist()] + samples.values.tolist()
 
         return JsonResponse({ 'data': samples_2d_array }, status= 200)
@@ -127,26 +130,26 @@ def generate_report(request):
         file_name= data.get('file_name')
 
         # Construct absolute paths
-        file_path = os.path.join(base_dir, "first_app", "user_files", f"{file_name}.csv")
-        new_data_path = os.path.join(base_dir, "first_app", "generated_data", f"{file_name}.csv")
+        file_path = os.path.join(base_dir, "data_generation", "user_files", f"{file_name}.csv")
+        new_data_path = os.path.join(base_dir, "data_generation", "generated_data", f"{file_name}.csv")
         # Check if files exist
         if not os.path.exists(file_path) or not os.path.exists(new_data_path):
             return JsonResponse({'error': 'File not found'}, status=404)
 
-        df= pd.read_csv(file_path)
+        real_data= pd.read_csv(file_path)
         new_data= pd.read_csv(new_data_path)
-        new_data= new_data.drop(new_data.columns[0], axis=1)
-        table_evaluator = TableEvaluator(df,new_data)
-        # table_evaluator.visual_evaluation()
+        generated_data= new_data.drop(new_data.columns[0], axis=1)
+        real_stats = real_data.describe()
 
-        # Generate the plot using a method from TableEvaluator (replace with actual method name)
-        # plot = table_evaluator.generate_plot()
+        table_evaluator = TableEvaluator(real_data,generate_data)
 
-        # Save the plot as a PNG file
-        # image_path = os.path.join(base_dir, "first_app", "plots", "plot.png")
-        # plot.savefig(image_path, format='png')
-
-        # plt.savefig('myfig')
+        pdf_filename=f"data_generation/plots/adult.pdf"
+        with PdfPages(pdf_filename) as pdf:
+            plt.figure(figsize=(10, 6))
+            plt.bar(['Real Data', 'Synthetic Data'], [table_evaluator.real_chi2(), table_evaluator.synthetic_chi2()])
+            plt.title('Chi-Square Test')
+            pdf.savefig()
+            plt.close()
         return JsonResponse({'res':'plot created'}, status=200)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
