@@ -58,7 +58,14 @@ def main(request):
         catObj= np.array(df.select_dtypes("object").columns)
         ctgan = CTGAN(verbose=True)
         ctgan.fit(df, catObj, epochs = 2)
-        ctgan.save(f"data_generation/models/{name}_model.pkl")
+        model_path="data_generation/models"
+
+        # Create the directory if it doesn't exist
+        if not os.path.exists(model_path):
+            os.makedirs(model_path)
+
+
+        ctgan.save(f"{model_path}/{name}_model.pkl")
 
         # samples = ctgan.sample(10)
 
@@ -89,7 +96,15 @@ def generate_data(request):
         ctgan = CTGAN.load(model_path)
 
         samples = ctgan.sample(n_rows)
-        samples.to_csv(f"data_generation/generated_data/{model_name}.csv")
+
+        generated_path="data_generation/generated_data"
+
+        # Create the directory if it doesn't exist
+        if not os.path.exists(generated_path):
+            os.makedirs(generated_path)
+
+
+        samples.to_csv(f"{generated_path}/{model_name}.csv")
         print(samples)
         samples_2d_array = [samples.columns.tolist()] + samples.values.tolist()
         print(samples_2d_array)
@@ -114,7 +129,15 @@ def sample_model(request):
         path= f"data_generation/pretrained_models/{param1}.pkl"
         ctgan= CTGAN.load(path)
         samples= ctgan.sample(n_rows)
-        samples.to_csv(f"data_generation/generated_data/{param1}.csv")
+
+        generated_path="data_generation/generated_data"
+
+        # Create the directory if it doesn't exist
+        if not os.path.exists(generated_path):
+            os.makedirs(generated_path)
+
+
+        samples.to_csv(f"{generated_path}/{param1}.csv")
         samples_2d_array = [samples.columns.tolist()] + samples.values.tolist()
 
         return JsonResponse({ 'data': samples_2d_array }, status= 200)
@@ -143,7 +166,15 @@ def generate_report(request):
 
         table_evaluator = TableEvaluator(real_data,generate_data)
 
-        pdf_filename=f"data_generation/plots/adult.pdf"
+        plot_path="data_generation/plots"
+
+        # Create the directory if it doesn't exist
+        if not os.path.exists(plot_path):
+            os.makedirs(plot_path)
+
+
+
+        pdf_filename=f"{plot_path}/adult.pdf"
         with PdfPages(pdf_filename) as pdf:
             plt.figure(figsize=(10, 6))
             plt.bar(['Real Data', 'Synthetic Data'], [table_evaluator.real_chi2(), table_evaluator.synthetic_chi2()])
