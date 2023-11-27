@@ -15,12 +15,12 @@ import json
 from django.core.exceptions import ObjectDoesNotExist
 from table_evaluator import TableEvaluator
 import matplotlib
-import matplotlib.pyplot as plt
-import io
 import os
-from matplotlib.backends.backend_pdf import PdfPages
-import seaborn as sns
-
+from django.template.loader import get_template
+from xhtml2pdf import pisa
+import pandas as pd
+from io import BytesIO
+from django.template import Context
 
 matplotlib.use('Agg')
 base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -143,6 +143,26 @@ def sample_model(request):
         return JsonResponse({ 'data': samples_2d_array }, status= 200)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+    
+def render_to_pdf(template_src, context_dict):
+    try:
+
+        template = get_template(template_src)
+        print("template", template)
+        # context = Context(context_dict)
+        html = template.render(context_dict)
+        print("html", html)
+        result = BytesIO()
+        pdf = pisa.pisaDocument(BytesIO(html.encode("ISO-8859-1")), result)
+        print("result", result)
+        if not pdf.err:
+            return result.getvalue()
+        else:
+            print("PDF generation error", pdf.err)
+    except Exception as e:
+        print(e)
+    return None
+
 
 @csrf_exempt
 @api_view(['POST'])
@@ -162,25 +182,38 @@ def generate_report(request):
         real_data= pd.read_csv(file_path)
         new_data= pd.read_csv(new_data_path)
         generated_data= new_data.drop(new_data.columns[0], axis=1)
+        real_data_sample= real_data.head()
+        generated_data_sample= real_data.head()
+
         real_stats = real_data.describe()
+        generated_stats= generated_data.describe()
 
-        table_evaluator = TableEvaluator(real_data,generate_data)
+        # table_evaluator = TableEvaluator(real_data,generated_data)
+        # table_evaluator.visual_evaluation(save_dir=f"data_generation/plots/{file_name}")
 
-        plot_path="data_generation/plots"
+        data={
+            'title': file_name,
+            'real_data':real_data_sample.to_html(classes='table table-bordered'),
+            'real_stats': real_stats.to_html(classes='table table-bordered'),
+            'generated_data':generated_data_sample.to_html(classes='table table-bordered'),
+            'generated_stats': generated_stats.to_html(classes='table table-bordered'),
+            'mean_std_path':f'data_generation/plots/{file_name}/mean_std.png',
+            'cumsums_path':f'data_generation/plots/{file_name}/cumsums.png',
+            'distributions_path':f'data_generation/plots/{file_name}/distributions.png',
+            'correlation_difference_path': f'data_generation/plots/{file_name}/correlation_difference.png',
+            'pca_path': f'data_generation/plots/{file_name}/pca.png'
+        }
+        print("data", data)
 
-        # Create the directory if it doesn't exist
-        if not os.path.exists(plot_path):
-            os.makedirs(plot_path)
-
-
-
-        pdf_filename=f"{plot_path}/adult.pdf"
-        with PdfPages(pdf_filename) as pdf:
-            plt.figure(figsize=(10, 6))
-            plt.bar(['Real Data', 'Synthetic Data'], [table_evaluator.real_chi2(), table_evaluator.synthetic_chi2()])
-            plt.title('Chi-Square Test')
-            pdf.savefig()
-            plt.close()
+         # Generate PDF content
+        pdf_content = render_to_pdf('pdf_template.html', data)
+        # print(pdf_content)
+        if pdf_content is not None:
+            with open('data_generation/adult_report.pdf', 'wb') as pdf_file:
+                pdf_file.write(pdf_content)
+                print("file created")
+        else:
+            print("pdf content error", pdf_content)
         return JsonResponse({'res':'plot created'}, status=200)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
