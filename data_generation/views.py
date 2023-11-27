@@ -17,7 +17,6 @@ from table_evaluator import TableEvaluator
 import matplotlib
 import os
 from django.template.loader import get_template
-from xhtml2pdf import pisa
 import pandas as pd
 from io import BytesIO
 from django.template import Context
