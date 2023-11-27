@@ -7,3 +7,5 @@ data_generation/user_files
 data_generation/__pycache__
 data_generation/plots
 synd_backend/__pycache__
+data_generation/generated_report
+x.html

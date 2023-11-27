@@ -1,40 +1,69 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <title>{{ title }}</title>
-</head>
-<body>
-    <h1>{{ title }}</h1>
-    
-    <p>Real data sample:</p>
-    {{ real_data|safe }}  {# Assuming your dataframe is in HTML format #}
-    <br/>
-    <p> Real data stats: </p>
+    <style>
+      table,
+      th,
+      td {
+        border: 1px solid #777;
+        border-collapse: collapse;
+      }
+      .heading,
+      .plots_heading {
+        text-align: center;
+        font-size: 20px;
+        color: red;
+      }
+      .data_title,
+      .plots_title {
+        margin-left: 10px;
+        font-size: 16px;
+        font-style: italic;
+      }
+      .sm_img{
+      width: 1000px;
+      height: 500px;
+      }
+      .lg_img{
+        width: 1000px;
+        height: 1000px;
+      }
+
+
+    </style>
+  </head>
+  <body>
+    <h1 class="heading">Detailed report of: {{ title }} dataset</h1>
+
+    <p class="data_title">Real data sample:</p>
+    {{ real_data|safe }} {# Assuming your dataframe is in HTML format #}
+    <br />
+    <p class="data_title">Real data stats:</p>
     {{real_stats |safe}}
-    <br/>
-    <p>Generated data sample:</p>
-    {{ generated_data|safe }}  {# Assuming your dataframe is in HTML format #}
-    <br/>
-    <p> Generated data stats: </p>
+    <br />
+    <p class="data_title">Generated data sample:</p>
+    {{ generated_data|safe }} {# Assuming your dataframe is in HTML format #}
+    <br />
+    <p class="data_title">Generated data stats:</p>
     {{generated_stats |safe}}
 
-    <p> Metrics of real and generated synthetic data </p>
+    <h1 class="plots_heading">Metrics of real and generated synthetic data</h1>
 
-    <p>Mean distribution:</p>
-    <img src="{{ mean_std_path }}" alt="Image">
-    <br/>
-    <p>cumulative sums per feature:</p>
-    <img src="{{ cumsums_path }}" alt="Image">
-    <br/>
-    <p>distributions per feature: </p>
-    <img src="{{ distributions_path }}" alt="Image">
-    <br/>
-    <p>Correlation difference: </p>
-    <img src="{{ correlation_difference_path }}" alt="Image">
-    <br/>
-    <p>Components of PCA: </p>
-    <img src="{{ pca_path }}" alt="Image">
-    <br/>
-
-</body>
+    <p class="plots_title">Mean distribution:</p>
+    <img class="sm_img" src="{{ mean_std_path }}" alt="Image" />
+    <br />
+    <p class="plots_title">cumulative sums per feature:</p>
+    <img class="lg_img" src="{{ cumsums_path }}" alt="Image" />
+    <br />
+    <p class="plots_title">distributions per feature:</p>
+    <img class="lg_img" src="{{ distributions_path }}" alt="Image" />
+    <br />
+    <p class="plots_title">Correlation difference:</p>
+    <img class="sm_img" src="{{ correlation_difference_path }}" alt="Image" />
+    <br />
+    <p class="plots_title">Components of PCA:</p>
+    <img class="sm_img" src="{{ pca_path }}" alt="Image" />
+    <br />
+  </body>
 </html>

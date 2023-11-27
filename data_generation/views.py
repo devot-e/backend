@@ -21,6 +21,8 @@ from xhtml2pdf import pisa
 import pandas as pd
 from io import BytesIO
 from django.template import Context
+from os import system
+# import pdfkit
 
 matplotlib.use('Agg')
 base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -151,9 +153,11 @@ def render_to_pdf(template_src, context_dict):
         print("template", template)
         # context = Context(context_dict)
         html = template.render(context_dict)
-        print("html", html)
-        result = BytesIO()
-        pdf = pisa.pisaDocument(BytesIO(html.encode("ISO-8859-1")), result)
+        # print("html", html)
+        # with open("x.html",'w') as file:
+        #     file.write(html)
+        # result = BytesIO()
+        # pdf = pisa.pisaDocument(BytesIO(html.encode("utf-8")), result)
         print("result", result)
         if not pdf.err:
             return result.getvalue()
@@ -167,7 +171,7 @@ def render_to_pdf(template_src, context_dict):
 @csrf_exempt
 @api_view(['POST'])
 def generate_report(request):
-    try:
+    # try:
 
         data= json.loads(request.body)
         file_name= data.get('file_name')
@@ -188,8 +192,8 @@ def generate_report(request):
         real_stats = real_data.describe()
         generated_stats= generated_data.describe()
 
-        # table_evaluator = TableEvaluator(real_data,generated_data)
-        # table_evaluator.visual_evaluation(save_dir=f"data_generation/plots/{file_name}")
+        table_evaluator = TableEvaluator(real_data,generated_data)
+        table_evaluator.visual_evaluation(save_dir=f"data_generation/plots/{file_name}")
 
         data={
             'title': file_name,
@@ -197,23 +201,31 @@ def generate_report(request):
             'real_stats': real_stats.to_html(classes='table table-bordered'),
             'generated_data':generated_data_sample.to_html(classes='table table-bordered'),
             'generated_stats': generated_stats.to_html(classes='table table-bordered'),
-            'mean_std_path':f'data_generation/plots/{file_name}/mean_std.png',
+            'mean_std_path':f'  data_generation/plots/{file_name}/mean_std.png',
             'cumsums_path':f'data_generation/plots/{file_name}/cumsums.png',
             'distributions_path':f'data_generation/plots/{file_name}/distributions.png',
             'correlation_difference_path': f'data_generation/plots/{file_name}/correlation_difference.png',
             'pca_path': f'data_generation/plots/{file_name}/pca.png'
         }
-        print("data", data)
+        # print("data", data)
 
          # Generate PDF content
-        pdf_content = render_to_pdf('pdf_template.html', data)
-        # print(pdf_content)
-        if pdf_content is not None:
-            with open('data_generation/adult_report.pdf', 'wb') as pdf_file:
-                pdf_file.write(pdf_content)
-                print("file created")
-        else:
-            print("pdf content error", pdf_content)
+        template_src='pdf_template.html'
+        
+        template = get_template(template_src)
+        print("template", template)
+        # context = Context(context_dict)
+        html = template.render(data)
+        # print('!'*100,type(html.__repr__),'!'*100)
+        with open("x.html",'w') as file:
+            file.write(str(html))
+        system(f"wkhtmltopdf --enable-local-file-access x.html data_generation/generated_report/{file_name}.pdf")
+        # # result = BytesIO()
+        # # pdf = pisa.pisaDocument(BytesIO(html.encode("utf-8")), result)
+        # pdfkit_config = pdfkit.configuration(wkhtmltopdf='/usr/local/bin/wkhtmltopdf')
+        # print('!'*100,str(html),'!'*100)
+
+        # pdfkit.from_string(str(html), 'data_generation/iris_report.pdf',options={"enable-local-file-access": True}, configuration=pdfkit_config)
         return JsonResponse({'res':'plot created'}, status=200)
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+    # except Exception as e:
+    #     return JsonResponse({'error': str(e)}, status=500)
