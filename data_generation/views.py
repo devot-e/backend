@@ -168,7 +168,7 @@ def render_to_pdf(template_src, context_dict):
 
 
 @csrf_exempt
-@api_view(['POST'])
+@require_POST
 def generate_report(request):
     try:
 
@@ -206,7 +206,6 @@ def generate_report(request):
             'correlation_difference_path': f'data_generation/plots/{file_name}/correlation_difference.png',
             'pca_path': f'data_generation/plots/{file_name}/pca.png'
         }
-        # print("data", data)
 
          # Generate PDF content
         template_src='pdf_template.html'
@@ -216,6 +215,13 @@ def generate_report(request):
         # context = Context(context_dict)
         html = template.render(data)
         # print('!'*100,type(html.__repr__),'!'*100)
+
+        generated_path="data_generation/generated_report"
+
+        # Create the directory if it doesn't exist
+        if not os.path.exists(generated_path):
+            os.makedirs(generated_path)
+
         with open("x.html",'w') as file:
             file.write(str(html))
         system(f"wkhtmltopdf --enable-local-file-access x.html data_generation/generated_report/{file_name}.pdf")
