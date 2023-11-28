@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import HttpResponse
+from django.http import HttpResponse, FileResponse
 from data_generation.models import  File, CSVFile
 from django.http import JsonResponse
 # from .models import Topic
@@ -170,7 +170,7 @@ def render_to_pdf(template_src, context_dict):
 @csrf_exempt
 @api_view(['POST'])
 def generate_report(request):
-    # try:
+    try:
 
         data= json.loads(request.body)
         file_name= data.get('file_name')
@@ -219,12 +219,10 @@ def generate_report(request):
         with open("x.html",'w') as file:
             file.write(str(html))
         system(f"wkhtmltopdf --enable-local-file-access x.html data_generation/generated_report/{file_name}.pdf")
-        # # result = BytesIO()
-        # # pdf = pisa.pisaDocument(BytesIO(html.encode("utf-8")), result)
-        # pdfkit_config = pdfkit.configuration(wkhtmltopdf='/usr/local/bin/wkhtmltopdf')
-        # print('!'*100,str(html),'!'*100)
-
-        # pdfkit.from_string(str(html), 'data_generation/iris_report.pdf',options={"enable-local-file-access": True}, configuration=pdfkit_config)
-        return JsonResponse({'res':'plot created'}, status=200)
-    # except Exception as e:
-    #     return JsonResponse({'error': str(e)}, status=500)
+        generated_pdf_path=f"data_generation/generated_report/{file_name}.pdf"
+        pdf_file = open(generated_pdf_path, 'rb')
+        response = FileResponse(pdf_file, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{file_name}.pdf"'
+        return response    
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
