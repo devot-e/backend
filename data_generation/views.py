@@ -21,6 +21,9 @@ import pandas as pd
 from io import BytesIO
 from django.template import Context
 from os import system
+from sdv.metadata import SingleTableMetadata
+from sdv.evaluation.single_table import evaluate_quality
+
 # import pdfkit
 
 matplotlib.use('Agg')
@@ -144,28 +147,6 @@ def sample_model(request):
         return JsonResponse({ 'data': samples_2d_array }, status= 200)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
-    
-def render_to_pdf(template_src, context_dict):
-    try:
-
-        template = get_template(template_src)
-        print("template", template)
-        # context = Context(context_dict)
-        html = template.render(context_dict)
-        # print("html", html)
-        # with open("x.html",'w') as file:
-        #     file.write(html)
-        # result = BytesIO()
-        # pdf = pisa.pisaDocument(BytesIO(html.encode("utf-8")), result)
-        print("result", result)
-        if not pdf.err:
-            return result.getvalue()
-        else:
-            print("PDF generation error", pdf.err)
-    except Exception as e:
-        print(e)
-    return None
-
 
 @csrf_exempt
 @require_POST
@@ -182,20 +163,36 @@ def generate_report(request):
         if not os.path.exists(file_path) or not os.path.exists(new_data_path):
             return JsonResponse({'error': 'File not found'}, status=404)
 
+        #getting real and generated data
         real_data= pd.read_csv(file_path)
         new_data= pd.read_csv(new_data_path)
         generated_data= new_data.drop(new_data.columns[0], axis=1)
+        
+        #extracting sample real and generated data
         real_data_sample= real_data.head()
         generated_data_sample= real_data.head()
 
+        #generating description of real and generated data
         real_stats = real_data.describe()
         generated_stats= generated_data.describe()
 
+        #getting figure from table_evaluator
         table_evaluator = TableEvaluator(real_data,generated_data)
         table_evaluator.visual_evaluation(save_dir=f"data_generation/plots/{file_name}")
 
+        #generating metadata
+        metadata = SingleTableMetadata()
+        metadata.detect_from_dataframe(real_data)
+
+        quality_report = evaluate_quality(
+            real_data,
+            generated_data,
+            metadata
+        )
+        quality_score= str(round(quality_report.get_score()*100, 2))
         data={
             'title': file_name,
+            'quality_score': quality_score,
             'real_data':real_data_sample.to_html(classes='table table-bordered'),
             'real_stats': real_stats.to_html(classes='table table-bordered'),
             'generated_data':generated_data_sample.to_html(classes='table table-bordered'),
@@ -204,17 +201,14 @@ def generate_report(request):
             'cumsums_path':f'data_generation/plots/{file_name}/cumsums.png',
             'distributions_path':f'data_generation/plots/{file_name}/distributions.png',
             'correlation_difference_path': f'data_generation/plots/{file_name}/correlation_difference.png',
-            'pca_path': f'data_generation/plots/{file_name}/pca.png'
+            'pca_path': f'data_generation/plots/{file_name}/pca.png',
         }
 
          # Generate PDF content
         template_src='pdf_template.html'
         
         template = get_template(template_src)
-        print("template", template)
-        # context = Context(context_dict)
         html = template.render(data)
-        # print('!'*100,type(html.__repr__),'!'*100)
 
         generated_path="data_generation/generated_report"
 
@@ -232,3 +226,5 @@ def generate_report(request):
         return response    
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+    
+    

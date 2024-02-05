@@ -21,20 +21,23 @@
         font-size: 16px;
         font-style: italic;
       }
-      .sm_img{
-      width: 1000px;
-      height: 500px;
+      .sm_img {
+        width: 1000px;
+        height: 500px;
       }
-      .lg_img{
+      .lg_img {
         width: 1000px;
         height: 1000px;
       }
-
-
+      .quality{
+        font-size: 16px;
+      }
     </style>
   </head>
   <body>
     <h1 class="heading">Detailed report of: {{ title }} dataset</h1>
+
+    <h2 class="quality">Quality Score: {{ quality_score|safe }}%</h2>
 
     <p class="data_title">Real data sample:</p>
     {{ real_data|safe }} {# Assuming your dataframe is in HTML format #}
