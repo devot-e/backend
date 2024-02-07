@@ -189,10 +189,21 @@ def generate_report(request):
             generated_data,
             metadata
         )
+        report=quality_report.get_visualization('Column Shapes')
+        try:
+            # system(f"touch 'data_generation/plots/quality_report.png'")
+            file=open(f'data_generation/plots/{file_name}/quality_report.png','ba')
+            file.close()
+            report.write_image(f'data_generation/plots/{file_name}/quality_report.png',format='png')
+        except Exception as e:
+            print("\n"*5,e,"\n"*5)
+        else :
+            print('\n'*2,"quality report generated succecfully",'\n'*2)
         quality_score= str(round(quality_report.get_score()*100, 2))
         data={
             'title': file_name,
             'quality_score': quality_score,
+            'quality_report': f'data_generation/plots/{file_name}/quality_report.png',
             'real_data':real_data_sample.to_html(classes='table table-bordered'),
             'real_stats': real_stats.to_html(classes='table table-bordered'),
             'generated_data':generated_data_sample.to_html(classes='table table-bordered'),

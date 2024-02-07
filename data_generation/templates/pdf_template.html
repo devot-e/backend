@@ -36,6 +36,8 @@
   <body>
     <h1 class="heading">Detailed report of: {{ title }} dataset</h1>
 
+    <h2 class="quality">Quality Score: {{ quality_score }}%</h2>
+
     <p class="data_title">Real data sample:</p>
     {{ real_data|safe }} {# Assuming your dataframe is in HTML format #}
     <br />
@@ -49,6 +51,10 @@
     {{generated_stats |safe}}
 
     <h1 class="plots_heading">Metrics of real and generated synthetic data</h1>
+
+
+    <p class="plots_title">Quality report:</p>
+    <img class="lg_img" src="{{ quality_report }}" alt="Image" />
 
     <p class="plots_title">Mean distribution:</p>
     <img class="sm_img" src="{{ mean_std_path }}" alt="Image" />
