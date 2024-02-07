@@ -39,7 +39,6 @@ def main(request):
     try:
         file= request.FILES['file']
         name=request.POST.get('name')
-        print("name = ",name)
 
         # Specify the directory where you want to save the file
         save_directory = 'data_generation/user_files'
@@ -73,8 +72,6 @@ def main(request):
 
         # samples = ctgan.sample(10)
 
-        # samples_2d_array = samples.values.tolist()
-        # print(samples_2d_array)        
         return JsonResponse(
             {
                 'res':'Model trained successfully',
@@ -109,9 +106,7 @@ def generate_data(request):
 
 
         samples.to_csv(f"{generated_path}/{model_name}.csv")
-        print(samples)
         samples_2d_array = [samples.columns.tolist()] + samples.values.tolist()
-        print(samples_2d_array)
         return JsonResponse({'res': samples_2d_array}, status=200)
     except ObjectDoesNotExist:
         return JsonResponse({'error': 'Model not found'}, status=404)
@@ -196,9 +191,7 @@ def generate_report(request):
             file.close()
             report.write_image(f'data_generation/plots/{file_name}/quality_report.png',format='png')
         except Exception as e:
-            print("\n"*5,e,"\n"*5)
-        else :
-            print('\n'*2,"quality report generated succecfully",'\n'*2)
+            print(e)
         quality_score= str(round(quality_report.get_score()*100, 2))
         data={
             'title': file_name,
