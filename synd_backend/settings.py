@@ -137,5 +137,3 @@ CSRF_USE_SESSIONS = False  # Default: False - Store CSRF token in Session as opp
 CSRF_COOKIE_HTTPONLY = False 
 
 
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
-STATIC_ROOT =os.path.join(BASE_DIR, 'staticfiles')
