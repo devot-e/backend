@@ -6,3 +6,5 @@ djangorestframework==3.14.0
 psycopg2-binary==2.9.9
 wkhtmltopdf==0.2
 sdv==1.7.0
+gunicorn==21.2.0
+kaleido==0.2.1

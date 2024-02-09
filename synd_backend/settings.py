@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-4#+f2to-1)j2)1)wvz()&o5t=mesthp*!1=^86(swg!kjp79^l
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['3.110.194.192', 'localhost', '127.0.0.1', '*']
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -135,3 +135,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CSRF_COOKIE_SECURE = True  # Default: False - Means will only send cookie via HTTPS (not HTTP)
 CSRF_USE_SESSIONS = False  # Default: False - Store CSRF token in Session as opposed to in cookie
 CSRF_COOKIE_HTTPONLY = False 
+
+
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+STATIC_ROOT =os.path.join(BASE_DIR, 'staticfiles')
