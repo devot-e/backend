@@ -2,7 +2,7 @@
     "builds": [
       {
         "src": "synd_backend/wsgi.py",
-        "use": "@vercel/python"
+        "use": "@ardnt/vercel-python-wsgi"
       }
     ],
     "routes": [
