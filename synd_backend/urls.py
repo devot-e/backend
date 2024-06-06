@@ -16,13 +16,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import re_path
-from first_app import views
 from django.urls import include
 urlpatterns = [
-    # re_path(r'^$', views.index),
-    re_path(r'^first_app/',include('first_app.urls')),
+    re_path(r'^data_generation/',include('data_generation.urls')),
     re_path('admin/', admin.site.urls),
-    re_path(r'file/$', views.main),
-    re_path(r'generate/', views.generate_data),
-    re_path(r'sample/', views.sample_model)
 ]

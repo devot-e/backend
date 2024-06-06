@@ -1,3 +1,11 @@
 files
-first_app/models
+data_generation/models
 **/__pycache__
+**/migrations
+data_generation/generated_data
+data_generation/user_files
+data_generation/__pycache__
+data_generation/plots
+synd_backend/__pycache__
+data_generation/generated_report
+x.html

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>{{ title }}</title>
+    <style>
+      table,
+      th,
+      td {
+        border: 1px solid #777;
+        border-collapse: collapse;
+      }
+      .heading,
+      .plots_heading {
+        text-align: center;
+        font-size: 20px;
+        color: red;
+      }
+      .data_title,
+      .plots_title {
+        margin-left: 10px;
+        font-size: 16px;
+        font-style: italic;
+      }
+      .sm_img{
+      width: 1000px;
+      height: 500px;
+      }
+      .lg_img{
+        width: 1000px;
+        height: 1000px;
+      }
+
+
+    </style>
+  </head>
+  <body>
+    <h1 class="heading">Detailed report of: {{ title }} dataset</h1>
+
+    <h2 class="quality">Quality Score: {{ quality_score }}%</h2>
+
+    <p class="data_title">Real data sample:</p>
+    {{ real_data|safe }} {# Assuming your dataframe is in HTML format #}
+    <br />
+    <p class="data_title">Real data stats:</p>
+    {{real_stats |safe}}
+    <br />
+    <p class="data_title">Generated data sample:</p>
+    {{ generated_data|safe }} {# Assuming your dataframe is in HTML format #}
+    <br />
+    <p class="data_title">Generated data stats:</p>
+    {{generated_stats |safe}}
+
+    <h1 class="plots_heading">Metrics of real and generated synthetic data</h1>
+
+
+    <p class="plots_title">Quality report:</p>
+    <img class="lg_img" src="{{ quality_report }}" alt="Image" />
+
+    <p class="plots_title">Mean distribution:</p>
+    <img class="sm_img" src="{{ mean_std_path }}" alt="Image" />
+    <br />
+    <p class="plots_title">cumulative sums per feature:</p>
+    <img class="lg_img" src="{{ cumsums_path }}" alt="Image" />
+    <br />
+    <p class="plots_title">distributions per feature:</p>
+    <img class="lg_img" src="{{ distributions_path }}" alt="Image" />
+    <br />
+    <p class="plots_title">Correlation difference:</p>
+    <img class="sm_img" src="{{ correlation_difference_path }}" alt="Image" />
+    <br />
+    <p class="plots_title">Components of PCA:</p>
+    <img class="sm_img" src="{{ pca_path }}" alt="Image" />
+    <br />
+  </body>
+</html>
